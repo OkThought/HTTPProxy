@@ -37,7 +37,7 @@ public class HTTPResponse extends HTTPMessage {
 
     @Override
     public byte[] head() {
-        return toString().getBytes(ASCII);
+        return toString().getBytes(US_ASCII);
     }
 
     @Override
@@ -51,7 +51,7 @@ public class HTTPResponse extends HTTPMessage {
             throws HTTPParseException, IOException {
         int result = NONE;
 
-        initReader();
+        decodeChars();
 
         if (version == null) {
             result |= parseVersion();
@@ -76,10 +76,9 @@ public class HTTPResponse extends HTTPMessage {
 
     private int parseStatusCode()
             throws HTTPParseException, IOException {
-        int r;
-        while ((r = reader.read()) != -1) {
+        while (chars.hasRemaining()) {
             ++pos;
-            char c = (char) r;
+            char c = chars.get();
             if (c == SP) {
                 statusCode = substring(mark, pos);
                 mark = pos + 1;
@@ -94,10 +93,9 @@ public class HTTPResponse extends HTTPMessage {
 
     private int parseReasonPhrase()
             throws HTTPParseException, IOException {
-        int r;
-        while ((r = reader.read()) != -1) {
+        while (chars.hasRemaining()) {
             ++pos;
-            char c = (char) r;
+            char c = chars.get();
             if (c == LF) {
                 reasonPhrase = substring(mark, pos).trim();
                 mark = pos + 1;

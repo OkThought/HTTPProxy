@@ -1,10 +1,8 @@
 package ru.nsu.ccfit.bogush.net.http;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.HashMap;
@@ -30,7 +28,9 @@ public abstract class HTTPMessage {
     public static final int STATUS_LINE         = VERSION | STATUS_CODE | REASON_PHRASE;
     public static final int FULL_RESPONSE_HEAD  = STATUS_LINE | HEADERS | EMPTY_LINE;
 
-    protected static final Charset ASCII = Charset.forName("US-ASCII");
+    protected static final Charset US_ASCII = Charset.forName("US-ASCII");
+    protected static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
+    protected static final Charset UTF_8 = Charset.forName("UTF-8");
 
     protected static final char SP = ' ';
     protected static final char HT = '\t';
@@ -44,7 +44,8 @@ public abstract class HTTPMessage {
     protected static final Pattern FIELD_PATTERN = Pattern.compile("(?<header>.+):(?<value>.*)");
 
     protected ByteBuffer byteBuffer;
-    protected Reader reader;
+    protected CharBuffer chars;
+//    protected CharBuffer octets;
     protected HashMap<String, String> fields;
     protected String version;
     protected int mark = 0;
@@ -56,10 +57,16 @@ public abstract class HTTPMessage {
 
     protected HTTPMessage() {
         byteBuffer = null;
+        chars = null;
     }
 
     protected HTTPMessage(int bufferSize) {
-        byteBuffer = ByteBuffer.allocate(bufferSize);
+        this(ByteBuffer.allocate(bufferSize));
+    }
+
+    protected HTTPMessage(ByteBuffer buffer) {
+        byteBuffer = buffer;
+        byteBuffer.mark();
     }
 
     public ByteBuffer buffer() {
@@ -126,7 +133,7 @@ public abstract class HTTPMessage {
         version = null;
         fields = null;
         byteBuffer.reset();
-        reader = null;
+        chars.reset();
     }
 
     public boolean isHeadReady() {
@@ -155,22 +162,11 @@ public abstract class HTTPMessage {
         return this;
     }
 
-    protected void initReader()
-            throws IOException {
-        reader = new InputStreamReader(
-                new ByteArrayInputStream(
-                        byteBuffer.array(),
-                        pos,
-                        byteBuffer.position() - pos),
-                ASCII);
-    }
-
     protected int parseVersion()
             throws HTTPParseException, IOException {
-        int r;
-        while ((r = reader.read()) != -1) {
+        while (chars.hasRemaining()) {
             ++pos;
-            char c = (char) r;
+            char c = chars.get();
             if (c == LF) {
                 if (pos - mark <= 2) {
                     throw new HTTPParseException("unexpected LF found", pos);
@@ -187,20 +183,19 @@ public abstract class HTTPMessage {
 
     protected int parseHeaders()
             throws HTTPParseException, IOException {
-        int r;
-        while ((r = reader.read()) != -1) {
+        while (chars.hasRemaining()) {
             ++pos;
-            char c = (char) r;
+            char c = chars.get();
             if (c == LF) {
                 if (!ALLOW_MULTILINE_FIELDS) {
-                    parseHeader(substring(mark, pos).trim());
+                    parseHeader(substring(mark, pos, UTF_8).trim());
                 }
 
                 if (lf == pos - 1 ||
                         cr == pos - 1 && lf == pos - 2) {
                     body = pos + 1;
                     if (ALLOW_MULTILINE_FIELDS) {
-                        parseHeaders(substring(mark, pos).trim());
+                        parseHeaders(substring(mark, pos, UTF_8).trim());
                     }
                     return HEADERS | EMPTY_LINE;
                 }
@@ -213,8 +208,24 @@ public abstract class HTTPMessage {
         return NONE;
     }
 
+    protected void decodeChars() {
+        int p = byteBuffer.position();
+        int l = byteBuffer.limit();
+        byteBuffer.reset().limit(p);
+        chars = UTF_8.decode(byteBuffer);
+        byteBuffer.reset().limit(p);
+        System.out.println("decoded: " + chars.toString());
+//        octets = ISO_8859_1.decode(byteBuffer);
+        byteBuffer.mark();
+        byteBuffer.position(p).limit(l);
+    }
+
     protected String substring(int from, int to) {
-        return new String(byteBuffer.array(), from, to-from, ASCII);
+        return substring(from, to, US_ASCII);
+    }
+
+    protected String substring(int from, int to, Charset charset) {
+        return new String(byteBuffer.array(), from, to-from, charset);
     }
 
     protected void parseHeader(String headerLine) {

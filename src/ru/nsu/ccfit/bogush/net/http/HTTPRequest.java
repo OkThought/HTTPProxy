@@ -91,7 +91,7 @@ public class HTTPRequest extends HTTPMessage {
 
     @Override
     public byte[] head() {
-        return toString().getBytes(ASCII);
+        return toString().getBytes(US_ASCII);
     }
 
     @Override
@@ -109,7 +109,9 @@ public class HTTPRequest extends HTTPMessage {
             throws HTTPParseException, IOException {
         int result = NONE;
 
-        initReader();
+        decodeChars();
+
+        System.out.println("parsing: " + new String(byteBuffer.array(), 0, byteBuffer.position(), US_ASCII));
 
         if (method == null) {
             result |= parseMethod();
@@ -134,10 +136,9 @@ public class HTTPRequest extends HTTPMessage {
 
     private int parseMethod()
             throws HTTPParseException, IOException {
-        int r;
-        while ((r = reader.read()) != -1) {
+        while (chars.hasRemaining()) {
             ++pos;
-            char c = (char) r;
+            char c = chars.get();
             if (c == SP) {
                 method = substring(mark, pos);
                 mark = pos + 1;
@@ -153,9 +154,9 @@ public class HTTPRequest extends HTTPMessage {
     private int parseURI()
             throws HTTPParseException, IOException {
         int r;
-        while ((r = reader.read()) != -1) {
+        while (chars.hasRemaining()) {
             ++pos;
-            char c = (char) r;
+            char c = chars.get();
             if (c == SP) {
                 CharSequence uri = substring(mark, pos);
                 parseURI(uri);
