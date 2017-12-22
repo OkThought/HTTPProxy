@@ -1,10 +1,11 @@
 package ru.nsu.ccfit.bogush.net.http;
 
 public class HTTPRequest extends HTTPMessage {
+    private static final int UNSPECIFIED_PORT = -1;
     private String method;
     private String protocol;
     private String host;
-    private int port = -1;
+    private int port = UNSPECIFIED_PORT;
     private String path;
     private String query;
 
@@ -13,8 +14,17 @@ public class HTTPRequest extends HTTPMessage {
         return method + SP + getURI() + SP + version;
     }
 
+    public String getURI() {
+        return (protocol == null || protocol.isEmpty() ? "" : protocol + "://") +
+                host + (port == UNSPECIFIED_PORT ? "" : ":" + port) + path + query;
+    }
+
     public String getMethod() {
         return method;
+    }
+
+    public boolean methodSpecified() {
+        return method != null && !method.isEmpty();
     }
 
     public HTTPRequest setMethod(String method) {
@@ -22,13 +32,12 @@ public class HTTPRequest extends HTTPMessage {
         return this;
     }
 
-    public String getURI() {
-        return (protocol == null || protocol.isEmpty() ? "" : protocol + "://") +
-                host + (port == -1 ? "" : ":" + port) + path + query;
-    }
-
     public String getProtocol() {
         return protocol;
+    }
+
+    public boolean protocolSpecified() {
+        return protocol != null && !protocol.isEmpty();
     }
 
     public HTTPRequest setProtocol(String protocol) {
@@ -36,8 +45,17 @@ public class HTTPRequest extends HTTPMessage {
         return this;
     }
 
+    public HTTPRequest resetProtocol() {
+        protocol = null;
+        return this;
+    }
+
     public String getHost() {
         return host;
+    }
+
+    public boolean hostSpecified() {
+        return host != null && !host.isEmpty();
     }
 
     public HTTPRequest setHost(String host) {
@@ -45,8 +63,17 @@ public class HTTPRequest extends HTTPMessage {
         return this;
     }
 
+    public HTTPRequest resetHost() {
+        host = null;
+        return this;
+    }
+
     public int getPort() {
         return port;
+    }
+
+    public boolean portSpecified() {
+        return port == UNSPECIFIED_PORT;
     }
 
     public HTTPRequest setPort(int port) {
@@ -54,8 +81,16 @@ public class HTTPRequest extends HTTPMessage {
         return this;
     }
 
+    public HTTPRequest resetPort() {
+        return setPort(UNSPECIFIED_PORT);
+    }
+
     public String getPath() {
         return path;
+    }
+
+    public boolean pathSpecified() {
+        return path != null && !path.isEmpty();
     }
 
     public HTTPRequest setPath(String path) {
@@ -65,6 +100,10 @@ public class HTTPRequest extends HTTPMessage {
 
     public String getQuery() {
         return query;
+    }
+
+    public boolean querySpecified() {
+        return query != null && !query.isEmpty();
     }
 
     public HTTPRequest setQuery(String query) {

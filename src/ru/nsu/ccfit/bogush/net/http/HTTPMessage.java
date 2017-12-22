@@ -26,13 +26,25 @@ public abstract class HTTPMessage {
         return version;
     }
 
+    public boolean versionSpecified() {
+        return version != null && !version.isEmpty();
+    }
+
     public HTTPMessage setVersion(String version) {
         this.version = version;
         return this;
     }
 
+    public HTTPMessage resetVersion() {
+        return setVersion(null);
+    }
+
     public HashMap<String, String> getFields() {
         return fields;
+    }
+
+    public boolean fieldsSpecified() {
+        return fields != null && !fields.isEmpty();
     }
 
     public Collection<String> getFieldValues() {
@@ -40,9 +52,9 @@ public abstract class HTTPMessage {
         return fields.values();
     }
 
-    public String getFieldValue(String header) {
+    public String getFieldValue(String name) {
         if (fields == null) return null;
-        return fields.get(header);
+        return fields.get(name);
     }
 
     public HTTPMessage setField(String name, String value) {
@@ -62,7 +74,7 @@ public abstract class HTTPMessage {
         return fields != null && fields.remove(name, value);
     }
 
-    public Set<String> getHeaders() {
+    public Set<String> getFieldNames() {
         if (fields == null) return null;
         return fields.keySet();
     }
