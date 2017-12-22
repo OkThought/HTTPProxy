@@ -1,13 +1,6 @@
 package ru.nsu.ccfit.bogush.net.http;
 
-import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public class HTTPRequest extends HTTPMessage {
-    protected static final Pattern URI_PATTERN = Pattern.compile(
-            "(?:(?<protocol>[a-zA-Z]+)://)?(?:(?<host>[^/:]+)(?::(?<port>\\d{1,5}))?)?(?<path>\\S*/)?(?<query>\\S+)");
-
     private String method;
     private String protocol;
     private String host;
@@ -15,11 +8,6 @@ public class HTTPRequest extends HTTPMessage {
     private String path;
     private String query;
 
-    public HTTPRequest() {}
-
-    public HTTPRequest(int bufferSize) {
-        super(bufferSize);
-    }
 
     public String getRequestLine() {
         return method + SP + getURI() + SP + version;
@@ -87,100 +75,6 @@ public class HTTPRequest extends HTTPMessage {
     public HTTPRequest setQuery(String query) {
         this.query = query;
         return this;
-    }
-
-    @Override
-    public byte[] head() {
-        return toString().getBytes(US_ASCII);
-    }
-
-    @Override
-    public void reset() {
-        super.reset();
-        method = null;
-        protocol = null;
-        host = null;
-        port = null;
-        path = null;
-        query = null;
-    }
-
-    public int parse()
-            throws HTTPParseException, IOException {
-        int result = NONE;
-
-        decodeChars();
-
-        System.out.println("parsing: " + new String(byteBuffer.array(), 0, byteBuffer.position(), US_ASCII));
-
-        if (method == null) {
-            result |= parseMethod();
-        }
-
-        if (query == null) {
-            result |= parseURI();
-        }
-
-        if (version == null) {
-            result |= parseVersion();
-        }
-
-        if (body == -1) {
-            result |= parseHeaders();
-        }
-
-        headReady = true;
-
-        return result;
-    }
-
-    private int parseMethod()
-            throws HTTPParseException, IOException {
-        while (chars.hasRemaining()) {
-            ++pos;
-            char c = chars.get();
-            if (c == SP) {
-                method = substring(mark, pos);
-                mark = pos + 1;
-                return METHOD;
-            } else if (c == CR || c == LF) {
-                throw new HTTPParseException("unexpected CR or LF found", pos);
-            }
-        }
-
-        return NONE;
-    }
-
-    private int parseURI()
-            throws HTTPParseException, IOException {
-        int r;
-        while (chars.hasRemaining()) {
-            ++pos;
-            char c = chars.get();
-            if (c == SP) {
-                CharSequence uri = substring(mark, pos);
-                parseURI(uri);
-                if (query == null) {
-                    throw new HTTPParseException("failed to parse query", pos);
-                }
-                mark = pos + 1;
-                return URI;
-            } else if (c == CR || c == LF) {
-                throw new HTTPParseException("unexpected CR or LF found", pos);
-            }
-        }
-
-        return NONE;
-    }
-
-    private void parseURI(CharSequence uri) {
-        Matcher matcher = URI_PATTERN.matcher(uri);
-        protocol = matcher.group("protocol");
-        host = matcher.group("host");
-        port = matcher.group("port");
-        path = matcher.group("path");
-        query = matcher.group("query");
-
     }
 
     @Override

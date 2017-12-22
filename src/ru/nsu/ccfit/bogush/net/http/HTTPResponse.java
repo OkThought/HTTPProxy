@@ -1,17 +1,8 @@
 package ru.nsu.ccfit.bogush.net.http;
 
-import java.io.IOException;
-
 public class HTTPResponse extends HTTPMessage {
     private String statusCode;
     private String reasonPhrase;
-    private boolean headReady = false;
-
-    public HTTPResponse() {}
-
-    public HTTPResponse(int bufferSize) {
-        super(bufferSize);
-    }
 
     public String getStatusLine() {
         return version + SP + statusCode + SP + reasonPhrase;
@@ -35,76 +26,6 @@ public class HTTPResponse extends HTTPMessage {
         return this;
     }
 
-    @Override
-    public byte[] head() {
-        return toString().getBytes(US_ASCII);
-    }
-
-    @Override
-    public void reset() {
-        super.reset();
-        statusCode = null;
-        reasonPhrase = null;
-    }
-
-    public int parse()
-            throws HTTPParseException, IOException {
-        int result = NONE;
-
-        decodeChars();
-
-        if (version == null) {
-            result |= parseVersion();
-        }
-
-        if (statusCode == null) {
-            result |= parseStatusCode();
-        }
-
-        if (reasonPhrase == null) {
-            result |= parseReasonPhrase();
-        }
-
-        if (body == -1) {
-            result |= parseHeaders();
-        }
-
-        headReady = true;
-
-        return result;
-    }
-
-    private int parseStatusCode()
-            throws HTTPParseException, IOException {
-        while (chars.hasRemaining()) {
-            ++pos;
-            char c = chars.get();
-            if (c == SP) {
-                statusCode = substring(mark, pos);
-                mark = pos + 1;
-                return STATUS_CODE;
-            } else if (c == CR || c == LF) {
-                throw new HTTPParseException("unexpected CR or LF found", pos);
-            }
-        }
-
-        return NONE;
-    }
-
-    private int parseReasonPhrase()
-            throws HTTPParseException, IOException {
-        while (chars.hasRemaining()) {
-            ++pos;
-            char c = chars.get();
-            if (c == LF) {
-                reasonPhrase = substring(mark, pos).trim();
-                mark = pos + 1;
-                return REASON_PHRASE;
-            }
-        }
-
-        return NONE;
-    }
 
     @Override
     public String toString() {
