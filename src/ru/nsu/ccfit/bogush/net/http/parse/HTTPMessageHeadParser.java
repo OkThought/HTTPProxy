@@ -1,4 +1,7 @@
-package ru.nsu.ccfit.bogush.net.http;
+package ru.nsu.ccfit.bogush.net.http.parse;
+
+import ru.nsu.ccfit.bogush.net.http.HTTPMessage;
+import ru.nsu.ccfit.bogush.net.http.HTTPParseException;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
