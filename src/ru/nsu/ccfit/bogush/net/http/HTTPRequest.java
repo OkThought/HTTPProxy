@@ -4,7 +4,7 @@ public class HTTPRequest extends HTTPMessage {
     private String method;
     private String protocol;
     private String host;
-    private String port;
+    private int port = -1;
     private String path;
     private String query;
 
@@ -24,7 +24,7 @@ public class HTTPRequest extends HTTPMessage {
 
     public String getURI() {
         return (protocol == null || protocol.isEmpty() ? "" : protocol + "://") +
-                host + (port == null ? "" : ":" + port) + path + query;
+                host + (port == -1 ? "" : ":" + port) + path + query;
     }
 
     public String getProtocol() {
@@ -45,16 +45,11 @@ public class HTTPRequest extends HTTPMessage {
         return this;
     }
 
-    public String getPort() {
+    public int getPort() {
         return port;
     }
 
     public HTTPRequest setPort(int port) {
-        this.port = String.valueOf(port);
-        return this;
-    }
-
-    public HTTPRequest setPort(String port) {
         this.port = port;
         return this;
     }
