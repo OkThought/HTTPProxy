@@ -5,6 +5,8 @@ import java.nio.ByteBuffer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static ru.nsu.ccfit.bogush.net.http.Constants.*;
+
 public class HTTPRequestHeadParser extends HTTPMessageHeadParser {
     private static final String PROTOCOL_PATTERN_STRING = "(?:(?<protocol>[a-zA-Z]+)://)";
     private static final String HOST_PATTERN_STRING = "(?:(?<host>[^/:]+)(?::(?<port>\\d{1,5}))?)";
@@ -16,10 +18,6 @@ public class HTTPRequestHeadParser extends HTTPMessageHeadParser {
     private static final String REQUEST_LINE_PATTERN_STRING = METHOD_PATTERN_STRING + SP + URI_PATTERN_STRING + SP +
             VERSION_PATTERN_STRING + "?" + CR + "?" + LF;
     private static final Pattern REQUEST_LINE_PATTERN = Pattern.compile(REQUEST_LINE_PATTERN_STRING);
-    private static final String DEFAULT_PROTOCOL = "http";
-    private static final String DEFAULT_HOST = "";
-    private static final int DEFAULT_PORT = 80;
-    private static final String DEFAULT_PATH = "";
 
     private HTTPRequest request;
 

@@ -4,13 +4,14 @@ import java.nio.ByteBuffer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static ru.nsu.ccfit.bogush.net.http.Constants.*;
+
 public class HTTPResponseHeadParser extends HTTPMessageHeadParser {
     private static final String STATUS_CODE_PATTERN_STRING = "(?<status>\\d{3})";
     private static final String REASON_PHRASE_PATTERN_STRING = "(?<reason>[\\w" + SP + HT + "]*)";
     private static final String STATUS_LINE_PATTERN_STRING = VERSION_PATTERN_STRING + SP + STATUS_CODE_PATTERN_STRING +
             SP + REASON_PHRASE_PATTERN_STRING + CR + "?" + LF;
     private static final Pattern STATUS_LINE_PATTERN = Pattern.compile(STATUS_LINE_PATTERN_STRING);
-    private static final String DEFAULT_REASON_PHRASE = "";
 
     static {
         Pattern.compile("(?<reason>[\\w]*)");}
