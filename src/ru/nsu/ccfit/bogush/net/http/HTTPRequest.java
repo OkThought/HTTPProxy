@@ -15,8 +15,8 @@ public class HTTPRequest extends HTTPMessage {
     }
 
     public String getURI() {
-        return (protocol == null || protocol.isEmpty() ? "" : protocol + "://") +
-                host + (port == UNSPECIFIED_PORT ? "" : ":" + port) + path + query;
+        return (protocolSpecified() ? protocol + "://" : "") +
+                (hostSpecified() ? host + (portSpecified() ? ":" + port : "") : "") + path + query;
     }
 
     public String getMethod() {

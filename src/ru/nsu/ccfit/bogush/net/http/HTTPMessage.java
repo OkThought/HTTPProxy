@@ -15,7 +15,7 @@ public abstract class HTTPMessage {
     protected HashMap<String, String> fields = new HashMap<>();
     protected String version;
 
-    protected String getFieldsString() {
+    public String getFieldsString() {
         if (fields == null) return "";
         return fields.entrySet().stream()
                 .map(e -> e.getKey() + ":" + e.getValue())
