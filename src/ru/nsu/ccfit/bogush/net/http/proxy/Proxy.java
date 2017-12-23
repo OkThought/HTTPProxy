@@ -437,8 +437,8 @@ public class Proxy {
             for (int i = from; i < to; i++) {
                 byte b = array[i];
                 if (b == CR) {
-                    cr = i;
                     pcr = cr;
+                    cr = i;
                 } else if (b == LF) {
                     if (cr == i - 1 && lf == i - 2) {
                         emptyLineSize = (pcr == i - 3 ? 4 : 3); // CR LF CR LF : LF CR LF
