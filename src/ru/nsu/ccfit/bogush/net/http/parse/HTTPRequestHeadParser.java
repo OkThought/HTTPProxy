@@ -10,13 +10,13 @@ import java.util.regex.Pattern;
 import static ru.nsu.ccfit.bogush.net.http.Constants.*;
 
 public class HTTPRequestHeadParser extends HTTPMessageHeadParser {
+    private static final String METHOD_PATTERN_STRING = "(?<method>GET|POST|HEAD)";
     private static final String PROTOCOL_PATTERN_STRING = "(?:(?<protocol>[a-zA-Z]+)://)";
     private static final String HOST_PATTERN_STRING = "(?:(?<host>[^/:]+)(?::(?<port>\\d{1,5}))?)";
     private static final String PATH_PATTERN_STRING = "(?<path>\\S*/)";
     private static final String QUERY_PATTERN_STRING = "(?<query>\\S+)";
     private static final String URI_PATTERN_STRING = PROTOCOL_PATTERN_STRING + "?" + HOST_PATTERN_STRING + "?" +
             PATH_PATTERN_STRING + "?" + QUERY_PATTERN_STRING;
-    private static final String METHOD_PATTERN_STRING = "(?<method>GET|POST|HEAD)";
     private static final String REQUEST_LINE_PATTERN_STRING = METHOD_PATTERN_STRING + SP + URI_PATTERN_STRING + SP +
             VERSION_PATTERN_STRING + "?" + CR + "?" + LF;
     private static final Pattern REQUEST_LINE_PATTERN = Pattern.compile(REQUEST_LINE_PATTERN_STRING);
@@ -46,6 +46,7 @@ public class HTTPRequestHeadParser extends HTTPMessageHeadParser {
 
     public HTTPRequestHeadParser(byte[] array, int offset, int length, HTTPRequest request) {
         super(array, offset, length, request);
+        this.request = request;
     }
 
     public HTTPRequest parse()
@@ -63,13 +64,18 @@ public class HTTPRequestHeadParser extends HTTPMessageHeadParser {
             throw new HTTPParseException("CRLF nor LF not found", length);
         }
 
-        parseRequestLine(substring(pos, requestLineEnd));
+        parseRequestLine(substring(pos, requestLineEnd + 1));
         pos = requestLineEnd + 1;
     }
 
     private void parseRequestLine(String s)
             throws HTTPParseException {
         Matcher matcher = REQUEST_LINE_PATTERN.matcher(s);
+
+        boolean matches = matcher.matches();
+        if (!matches) {
+            throw new HTTPParseException("Couldn't parse request line", pos);
+        }
 
         String method = matcher.group("method");
         if (method != null) {

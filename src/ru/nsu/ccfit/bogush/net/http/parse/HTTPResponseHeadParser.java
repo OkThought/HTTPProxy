@@ -62,7 +62,7 @@ public class HTTPResponseHeadParser extends HTTPMessageHeadParser {
             throw new HTTPParseException("CRLF nor LF not found", length);
         }
 
-        parseStatusLine(substring(pos, requestLineEnd));
+        parseStatusLine(substring(pos, requestLineEnd + 1));
         pos = requestLineEnd + 1;
     }
 
@@ -70,10 +70,15 @@ public class HTTPResponseHeadParser extends HTTPMessageHeadParser {
             throws HTTPParseException {
         Matcher matcher = STATUS_LINE_PATTERN.matcher(s);
 
+        boolean matches = matcher.matches();
+        if (!matches) {
+            throw new HTTPParseException("Couldn't parse status line", pos);
+        }
+
         String version = matcher.group("version");
         if (version != null) {
             response.setVersion(version);
-            pos += version.length();
+            pos += version.length() + 1;
         } else {
             throw new HTTPParseException("Couldn't parse version", pos);
         }
@@ -81,7 +86,7 @@ public class HTTPResponseHeadParser extends HTTPMessageHeadParser {
         String status = matcher.group("status");
         if (status != null) {
             response.setStatusCode(status);
-            pos += status.length();
+            pos += status.length() + 1;
         } else {
             throw new HTTPParseException("Couldn't status code", pos);
         }
@@ -89,7 +94,7 @@ public class HTTPResponseHeadParser extends HTTPMessageHeadParser {
         String reason = matcher.group("reason");
         if (reason != null) {
             response.setReasonPhrase(reason);
-            pos += reason.length();
+            pos += reason.length() + 2;
         } else {
             response.setReasonPhrase(DEFAULT_REASON_PHRASE);
         }

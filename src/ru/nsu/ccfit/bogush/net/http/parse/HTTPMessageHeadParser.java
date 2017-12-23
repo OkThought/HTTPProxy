@@ -72,6 +72,11 @@ public abstract class HTTPMessageHeadParser {
             throws HTTPParseException {
         Matcher matcher = FIELD_PATTERN.matcher(field);
 
+        boolean matches = matcher.matches();
+        if (!matches) {
+            throw new HTTPParseException("Couldn't parse field", pos);
+        }
+
         String name = matcher.group("name");
         if (name == null) {
             throw new HTTPParseException("Couldn't parse field name", pos);
@@ -82,7 +87,7 @@ public abstract class HTTPMessageHeadParser {
             throw new HTTPParseException("Couldn't parse field value", pos);
         }
 
-        message.setField(name, value);
+        message.setField(name.trim(), value.trim());
         pos += field.length() + 2;
     }
 }
