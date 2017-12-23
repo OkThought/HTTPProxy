@@ -1,4 +1,4 @@
-package ru.nsu.ccfit.bogush.net.http;
+package ru.nsu.ccfit.bogush.net.http.parse;
 
 import java.text.ParseException;
 

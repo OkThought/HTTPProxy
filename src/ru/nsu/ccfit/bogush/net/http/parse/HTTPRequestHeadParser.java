@@ -1,6 +1,5 @@
 package ru.nsu.ccfit.bogush.net.http.parse;
 
-import ru.nsu.ccfit.bogush.net.http.HTTPParseException;
 import ru.nsu.ccfit.bogush.net.http.HTTPRequest;
 
 import java.io.IOException;
