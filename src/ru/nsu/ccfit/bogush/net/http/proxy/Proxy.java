@@ -1,34 +1,29 @@
 package ru.nsu.ccfit.bogush.net.http.proxy;
 
-import ru.nsu.ccfit.bogush.net.http.HTTPMessage;
-import ru.nsu.ccfit.bogush.net.http.HTTPParseException;
-import ru.nsu.ccfit.bogush.net.http.HTTPRequest;
-import ru.nsu.ccfit.bogush.net.http.HTTPResponse;
+import ru.nsu.ccfit.bogush.net.http.*;
+import ru.nsu.ccfit.bogush.net.http.parse.HTTPRequestHeadParser;
+import ru.nsu.ccfit.bogush.net.http.parse.HTTPResponseHeadParser;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Objects;
 
+import static ru.nsu.ccfit.bogush.net.http.Constants.*;
 import static java.nio.channels.SelectionKey.*;
 
 public class Proxy {
     private static final HashMap<Integer, HTTPResponse> STATUS_LINES = new HashMap<>();
     static {
         STATUS_LINES.put(400, new HTTPResponse().setStatusCode("400").setReasonPhrase("Bad Request"));
+        STATUS_LINES.put(500, new HTTPResponse().setStatusCode("500").setReasonPhrase("Internal Server Error"));
         STATUS_LINES.put(501, new HTTPResponse().setStatusCode("501").setReasonPhrase("Not Implemented"));
         STATUS_LINES.put(502, new HTTPResponse().setStatusCode("502").setReasonPhrase("Bad Gateway"));
     }
-    private static final Charset US_ASCII = Charset.forName("US-ASCII");
-    private static final byte[] CRLF = "\r\n".getBytes(US_ASCII);
-    private static final byte CR = CRLF[0];
-    private static final byte LF = CRLF[1];
     private static int port = 50505;
     private static int bufferSize = 1 << 20;
     private static int backlog = 0;
@@ -240,15 +235,11 @@ public class Proxy {
             if (bytesRead > 0) {
                 if (opposite.socket.isConnected()) {
                     // opposite connected => it's a server response
-                    addOps(opposite.socket.keyFor(selector), OP_WRITE);
+                    readResponse(bytesRead);
                 } else {
                     // opposite not connected => it's a client request
-                    int emptyLineIndex = findEmptyLine(buf.array(), buf.position() - bytesRead, buf.position());
-                    if (emptyLineIndex > 0) {
-                        // request-head is between 0 and emptyLineIndex
-                        // parse request
+                    readRequest(bytesRead);
 
-                    }
                 }
             } else if (bytesRead == -1) {
                 // eof
@@ -262,13 +253,95 @@ public class Proxy {
                         opposite.close();
                     }
                 }
-
             }
 
             if (!buf.hasRemaining()) {
                 removeOps(socket.keyFor(selector), OP_READ);
             }
             return bytesRead;
+        }
+
+        private void readResponse(int bytesRead) {
+            if (httpMessageHeadParsed) {
+                addOps(opposite.socket.keyFor(selector), OP_WRITE);
+            } else {
+                int emptyLineIndex = findEmptyLine(buf.array(), buf.position() - bytesRead, buf.position());
+                if (emptyLineIndex == -1) return;
+
+                HTTPResponseHeadParser parser = new HTTPResponseHeadParser(buf.array(), 0, emptyLineIndex);
+                HTTPResponse response;
+
+                try {
+                    response = parser.parse();
+                } catch (HTTPParseException e) {
+                    e.printStackTrace();
+                    // TODO: 12/22/17 send Server internal error
+//                    response = STATUS_LINES.get(500);
+                    return;
+                }
+
+                normalize(response);
+            }
+        }
+
+        private void normalizeGeneral(HTTPMessage m) {
+            if (!Objects.equals(m.getVersion(), DEFAULT_VERSION)) {
+                m.setVersion(DEFAULT_VERSION);
+            }
+
+            if (!m.fieldsSpecified() || !Objects.equals(m.getFieldValue("Connection"), "close")) {
+                m.setField("Connection", "close");
+            }
+        }
+
+        private void normalize(HTTPResponse response) {
+            normalizeGeneral(response);
+        }
+
+        private void readRequest(int bytesRead)
+                throws IOException {
+            int emptyLineIndex = findEmptyLine(buf.array(), buf.position() - bytesRead, buf.position());
+            if (emptyLineIndex == -1) {
+                return;
+            }
+
+            HTTPRequestHeadParser parser = new HTTPRequestHeadParser(buf.array(), 0, emptyLineIndex);
+            HTTPRequest request;
+
+            try {
+                request = parser.parse();
+            } catch (HTTPParseException e) {
+                e.printStackTrace();
+                // TODO: 12/22/17 send Bad Request
+                return;
+            }
+
+            normalize(request);
+        }
+
+        private void normalize(HTTPRequest request) {
+            normalizeGeneral(request);
+
+            if (request.portSpecified() && request.getPort() != DEFAULT_PORT) {
+                // TODO: 12/22/17 send Bad Request
+                return;
+            }
+
+            if (request.getFieldValue("Host") == null) {
+                request.setField("Host", request.getHost());
+            }
+
+            if (Objects.equals(request.getProtocol(), DEFAULT_PROTOCOL)) {
+                request.resetProtocol();
+            }
+
+            if (request.hostSpecified()) {
+                request.resetHost();
+            }
+
+            if (request.portSpecified()) {
+                request.resetPort();
+            }
         }
 
         private int findEmptyLine(byte[] array, int from, int to) {
