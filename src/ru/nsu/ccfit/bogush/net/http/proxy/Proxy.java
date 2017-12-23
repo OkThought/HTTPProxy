@@ -241,6 +241,8 @@ public class Proxy {
             System.out.format("%d bytes\n", bytesRead);
 
             if (bytesRead > 0) {
+                System.out.println();
+                System.out.println(new String(buf.array(), buf.position() - bytesRead, bytesRead));
                 if (httpMessageHeadParsed) {
                     addOps(opposite.socket.keyFor(selector), OP_WRITE);
                 } else if (opposite != null && opposite.socket != null && opposite.socket.isConnected()) {
@@ -276,6 +278,8 @@ public class Proxy {
             int bytesWritten = socket.write(opposite.buf);
 
             if (bytesWritten > 0) {
+                System.out.println();
+                System.out.println(new String(opposite.buf.array(), opposite.buf.position() - bytesWritten, bytesWritten));
                 opposite.buf.compact();
                 addOps(opposite.socket.keyFor(selector), OP_READ);
             }
@@ -331,6 +335,7 @@ public class Proxy {
                 error(status);
             }
             putMessageIntoBuffer(response, emptyLinePos + emptyLineSize);
+            addOps(opposite.socket.keyFor(selector), OP_WRITE);
         }
 
         private void readRequest(int bytesRead)
