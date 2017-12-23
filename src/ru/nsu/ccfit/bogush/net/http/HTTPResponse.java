@@ -1,5 +1,17 @@
 package ru.nsu.ccfit.bogush.net.http;
 
+/**
+ * Java-bean object for storing HTTPResponse head information. <br>
+ *
+ * HTTP Request scheme: <br>
+ * <code>
+ * VERSION SP STATUS-CODE SP REASON-PHRASE CR LF<br>
+ * <br>
+ * VERSION = HTTP "/" digit "." digit <br>
+ * STATUS-CODE = 3 * digit <br>
+ * REASON-PHRASE = TEXT <br>
+ * </code>
+ */
 public class HTTPResponse extends HTTPMessage {
     private String statusCode;
     private String reasonPhrase;

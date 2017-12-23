@@ -1,5 +1,18 @@
 package ru.nsu.ccfit.bogush.net.http;
 
+/**
+ * Java-bean object for storing HTTPRequest head information. <br>
+ *
+ * HTTP Response scheme: <br>
+ * <code>
+ * METHOD SP URI SP VERSION CR LF <br>
+ * <br>
+ * METHOD = GET | POST | HEAD <br>
+ * URI = [ protocol "://" ] [ host [ ":" port ] ] path query <br>
+ * path = "/" [ path-element1 "/" [ path-element2 "/" ] ] <br>
+ * VERSION = HTTP / digit "." digit <br>
+ * </code>
+ */
 public class HTTPRequest extends HTTPMessage {
     private static final int UNSPECIFIED_PORT = -1;
     private String method;
