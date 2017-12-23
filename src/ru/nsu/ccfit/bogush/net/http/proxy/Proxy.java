@@ -243,7 +243,7 @@ public class Proxy {
             if (bytesRead > 0) {
                 if (httpMessageHeadParsed) {
                     addOps(opposite.socket.keyFor(selector), OP_WRITE);
-                } else if (opposite.socket.isConnected()) {
+                } else if (opposite != null && opposite.socket != null && opposite.socket.isConnected()) {
                     // opposite connected => it's a server response
                     readResponse(bytesRead);
                 } else {
