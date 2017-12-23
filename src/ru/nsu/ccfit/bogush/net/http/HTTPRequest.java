@@ -1,5 +1,8 @@
 package ru.nsu.ccfit.bogush.net.http;
 
+import ru.nsu.ccfit.bogush.net.http.build.HTTPMessageBuilder;
+import ru.nsu.ccfit.bogush.net.http.build.HTTPRequestBuilder;
+
 /**
  * Java-bean object for storing HTTPRequest head information. <br>
  *
@@ -122,6 +125,11 @@ public class HTTPRequest extends HTTPMessage {
     public HTTPRequest setQuery(String query) {
         this.query = query;
         return this;
+    }
+
+    @Override
+    public HTTPMessageBuilder createBuilder() {
+        return new HTTPRequestBuilder(this);
     }
 
     @Override

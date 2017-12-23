@@ -1,5 +1,8 @@
 package ru.nsu.ccfit.bogush.net.http;
 
+import ru.nsu.ccfit.bogush.net.http.build.HTTPMessageBuilder;
+import ru.nsu.ccfit.bogush.net.http.build.HTTPResponseBuilder;
+
 /**
  * Java-bean object for storing HTTPResponse head information. <br>
  *
@@ -38,6 +41,10 @@ public class HTTPResponse extends HTTPMessage {
         return this;
     }
 
+    @Override
+    public HTTPMessageBuilder createBuilder() {
+        return new HTTPResponseBuilder(this);
+    }
 
     @Override
     public String toString() {

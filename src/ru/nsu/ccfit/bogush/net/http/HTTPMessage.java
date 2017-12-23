@@ -1,5 +1,7 @@
 package ru.nsu.ccfit.bogush.net.http;
 
+import ru.nsu.ccfit.bogush.net.http.build.HTTPMessageBuilder;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Set;
@@ -78,4 +80,6 @@ public abstract class HTTPMessage {
         if (fields == null) return null;
         return fields.keySet();
     }
+
+    public abstract HTTPMessageBuilder createBuilder();
 }
