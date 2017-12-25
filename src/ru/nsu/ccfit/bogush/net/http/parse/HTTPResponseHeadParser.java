@@ -15,9 +15,6 @@ public class HTTPResponseHeadParser extends HTTPMessageHeadParser {
             SP + REASON_PHRASE_PATTERN_STRING + CR + "?" + LF;
     private static final Pattern STATUS_LINE_PATTERN = Pattern.compile(STATUS_LINE_PATTERN_STRING);
 
-    static {
-        Pattern.compile("(?<reason>[\\w]*)");}
-
     private HTTPResponse response;
 
     public HTTPResponseHeadParser(ByteBuffer byteBuffer) {
