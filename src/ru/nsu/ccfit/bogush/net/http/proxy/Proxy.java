@@ -21,10 +21,10 @@ public class Proxy {
     private static final HashMap<Integer, HTTPResponse> STATUS_LINES = new HashMap<>();
 
     static {
-        STATUS_LINES.put(400, new HTTPResponse().setStatusCode("400").setReasonPhrase("Bad Request"));
-        STATUS_LINES.put(500, new HTTPResponse().setStatusCode("500").setReasonPhrase("Internal Server Error"));
-        STATUS_LINES.put(501, new HTTPResponse().setStatusCode("501").setReasonPhrase("Not Implemented"));
-        STATUS_LINES.put(502, new HTTPResponse().setStatusCode("502").setReasonPhrase("Bad Gateway"));
+        STATUS_LINES.put(400, (HTTPResponse) new HTTPResponse().setStatusCode("400").setReasonPhrase("Bad Request").setVersion(DEFAULT_VERSION));
+        STATUS_LINES.put(500, (HTTPResponse) new HTTPResponse().setStatusCode("500").setReasonPhrase("Internal Server Error").setVersion(DEFAULT_VERSION));
+        STATUS_LINES.put(501, (HTTPResponse) new HTTPResponse().setStatusCode("501").setReasonPhrase("Not Implemented").setVersion(DEFAULT_VERSION));
+        STATUS_LINES.put(502, (HTTPResponse) new HTTPResponse().setStatusCode("502").setReasonPhrase("Bad Gateway").setVersion(DEFAULT_VERSION));
     }
 
     private static int port = 50505;
@@ -257,10 +257,14 @@ public class Proxy {
                 removeOps(socket.keyFor(selector), OP_READ);
 
                 if (buf.position() == 0) {
-                    opposite.shutdownOutput();
-                    if (outputIsShutdown || opposite.buf.position() == 0) {
+                    if (opposite != null) {
+                        opposite.shutdownOutput();
+                    }
+                    if (outputIsShutdown || opposite != null && opposite.buf.position() == 0) {
                         close();
-                        opposite.close();
+                        if (opposite != null) {
+                            opposite.close();
+                        }
                     }
                 }
             }
@@ -335,6 +339,7 @@ public class Proxy {
                 error(status);
             }
             putMessageIntoBuffer(response, emptyLinePos + emptyLineSize);
+            httpMessageHeadParsed = true;
             addOps(opposite.socket.keyFor(selector), OP_WRITE);
         }
 
